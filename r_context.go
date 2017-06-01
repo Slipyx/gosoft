@@ -1,6 +1,9 @@
 package main
 
-import ( "math" )
+import (
+	"math"
+	"fmt"
+)
 
 const (
 	// 3d rt
@@ -15,32 +18,15 @@ const (
 // render context
 type RenderContext struct {
 	Bm *Bitmap
-	scanBuf []int
 }
 
 // creates and initializes new 3d render context
 // using the const VID dimensions
 func CreateRenderContext() *RenderContext {
+	fmt.Println( "new ctx bro" )
 	ctx := &RenderContext{}
 	ctx.Bm = NewBitmap( VID_W, VID_H )
-	ctx.scanBuf = make( []int, VID_H * 2 )
 	return ctx
-}
-
-func (r *RenderContext) DrawScanBuffer( y, xmin, xmax int ) {
-	r.scanBuf[y * 2] = xmin
-	r.scanBuf[y * 2 + 1] = xmax
-}
-
-func (r *RenderContext) FillShape( ymin, ymax int ) {
-	for j := ymin; j < ymax; j++ {
-		xmin := r.scanBuf[j * 2]
-		xmax := r.scanBuf[j * 2 + 1]
-
-		for i := xmin; i < xmax; i++ {
-			r.Bm.DrawPixel( i, j, 0xff, 0xff, 0xff, 0xff )
-		}
-	}
 }
 
 func (r *RenderContext) FillTriangle( v1, v2, v3 Vertex ) {
@@ -55,33 +41,45 @@ func (r *RenderContext) FillTriangle( v1, v2, v3 Vertex ) {
 	if midY.Pos.Y < minY.Pos.Y { midY, minY = minY, midY }
 	if maxY.Pos.Y < midY.Pos.Y { maxY, midY = midY, maxY }
 
-	hand := 1
-	if minY.TriangleArea2( maxY, midY ) < 0 { hand = 0 }
-
-	r.ScanConvertTriangle( minY, midY, maxY, hand )
-	r.FillShape( int(math.Ceil( float64(minY.Pos.Y) )), int(math.Ceil( float64(maxY.Pos.Y) )) )
+	r.ScanTriangle( minY, midY, maxY, minY.TriangleArea2( maxY, midY ) >= 0 )
 }
 
-func (r *RenderContext) ScanConvertTriangle( minY, midY, maxY Vertex, hand int ) {
-	r.ScanConvertLine( minY, maxY, 0 + hand )
-	r.ScanConvertLine( minY, midY, 1 - hand )
-	r.ScanConvertLine( midY, maxY, 1 - hand )
+func (r *RenderContext) DrawScanLine( left, right Edge, j int ) {
+	xmin := int(math.Ceil( float64(left.x) ))
+	xmax := int(math.Ceil( float64(right.x) ))
+
+	for i := xmin; i < xmax; i++ {
+		r.Bm.DrawPixel( i, j, 0xff, 0xff, 0xff, 0xff )
+	}
+	//r.Bm.DrawPixel( xmin, j, 0xff, 0x00, 0x00, 0xff )
+	//r.Bm.DrawPixel( xmax, j, 0x00, 0x00, 0xff, 0xff )
 }
 
-func (r *RenderContext) ScanConvertLine( minY, maxY Vertex, side int ) {
-	startY, endY := int(math.Ceil( float64(minY.Pos.Y) )), int(math.Ceil( float64(maxY.Pos.Y) ))
-	//startX, endX := int(math.Ceil( float64(minY.Pos.X) )), int(math.Ceil( float64(maxY.Pos.X) ))
+func (r *RenderContext) ScanTriangle( minY, midY, maxY Vertex, hand bool ) {
+	topToBot := NewEdge( minY, maxY )
+	topToMid := NewEdge( minY, midY )
+	midToBot := NewEdge( midY, maxY )
 
-	distY, distX := maxY.Pos.Y - minY.Pos.Y, maxY.Pos.X - minY.Pos.X
+	// scan edges apparently needs to modify
+	// the passed in edge so it continues correctly
+	// on subsequent calls
+	r.ScanEdges( &topToBot, &topToMid, hand )
+	r.ScanEdges( &topToBot, &midToBot, hand )
+}
 
-	if distY <= 0 { return }
+// passed in edges need to be mutable so it can continue
+// on subsequent calls
+func (r *RenderContext) ScanEdges( a, b *Edge, hand bool ) {
+	//var left *Edge = a
+	//var right *Edge = b
 
-	xStep := float32(distX) / float32(distY)
-	yPreStep := float32(startY) - minY.Pos.Y
-	curX := minY.Pos.X + yPreStep * xStep
+	yStart, yEnd := b.yStart, b.yEnd
 
-	for j := startY; j < endY; j++ {
-		r.scanBuf[j * 2 + side] = int(math.Ceil( float64(curX) ))
-		curX += xStep
+	if hand { a, b = b, a }
+
+	for j := yStart; j < yEnd; j++ {
+		r.DrawScanLine( *a, *b, j )
+		a.Step()
+		b.Step()
 	}
 }

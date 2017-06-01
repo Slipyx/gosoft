@@ -130,12 +130,12 @@ func main() {
 
 		// vertices and transforms
 		v1 := Vertex{ Vec4{ 0, 1, 0, 1 } }
-		v2 := Vertex{ Vec4{ -0.75, -1, 0, 1 } }
-		v3 := Vertex{ Vec4{ 0.75, -1, 0, 1 } }
+		v2 := Vertex{ Vec4{ -1, 0, 0, 1 } }
+		v3 := Vertex{ Vec4{ 1, 0, 0, 1 } }
 
 		trot += 0.5 * dt
 		var transMat Mat4
-		transMat.InitTranslation( 0, 0, 3 )
+		transMat.InitTranslation( -1, 0, 2 )
 		var rotMat Mat4
 		rotMat.InitRotation( 0, trot, 0 )
 

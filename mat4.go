@@ -23,8 +23,8 @@ func (m *Mat4) InitPerspective( fov, aspect, near, far float32 ) {
 }
 
 func (m *Mat4) InitScreenSpaceTransform( halfW, halfH float32 ) {
-	m[0][0] = halfW; m[0][1] = 0; m[0][2] = 0; m[0][3] = halfW
-	m[1][0] = 0; m[1][1] = -halfH; m[1][2] = 0; m[1][3] = halfH
+	m[0][0] = halfW; m[0][1] = 0; m[0][2] = 0; m[0][3] = halfW - 0.5
+	m[1][0] = 0; m[1][1] = -halfH; m[1][2] = 0; m[1][3] = halfH - 0.5
 	m[2][0] = 0; m[2][1] = 0; m[2][2] = 1; m[2][3] = 0
 	m[3][0] = 0; m[3][1] = 0; m[3][2] = 0; m[3][3] = 1
 }
