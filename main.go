@@ -90,7 +90,7 @@ func main() {
 	// 3d rt can now be any arbritary size and
 	// automatically be corrected
 	var ProjMat Mat4
-	ProjMat.InitPerspective( math.Pi / 180.0 * 90,
+	ProjMat.InitPerspective( math.Pi / 180.0 * 66,
 		float32(VID2D_W) / VID2D_H, 0.1, 1000.0 )
 
 	// main loops
@@ -129,13 +129,13 @@ func main() {
 		ctx.Bm.Clear( 0x20 )
 
 		// vertices and transforms
-		v1 := Vertex{ Vec4{ 0, 1, 0, 1 } }
-		v2 := Vertex{ Vec4{ -1, 0, 0, 1 } }
-		v3 := Vertex{ Vec4{ 1, 0, 0, 1 } }
+		v1 := Vertex{ Vec4{ 0, 1, 0, 1 }, Vec4{ 1, 0, 0, 1 } }
+		v2 := Vertex{ Vec4{ -1, -1, 0, 1 }, Vec4{ 0, 1, 0, 1 } }
+		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 0, 0, 1, 1 } }
 
 		trot += 0.5 * dt
 		var transMat Mat4
-		transMat.InitTranslation( -1, 0, 2 )
+		transMat.InitTranslation( 0, 0, 3 )
 		var rotMat Mat4
 		rotMat.InitRotation( 0, trot, 0 )
 
