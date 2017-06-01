@@ -61,5 +61,6 @@ func (self *Stars3D) UpdateAndRender( ctx *RenderContext, dt float32 ) {
 		}
 	}
 
-	ctx.FillTriangle( tv[0], tv[1], tv[2] )
+	ctx.FillTriangle( tv[0], tv[1], tv[2], NewBitmap(1,1) )
 }
+

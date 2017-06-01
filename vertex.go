@@ -26,22 +26,23 @@ func (v Vec4) Mul( f float32 ) Vec4 {
 }
 
 func (v Vec4) Lerp( to Vec4, amt float32 ) Vec4 {
-	return to.Sub( v ).Mul( amt ).Add( v )
+	return v.Add( to.Sub( v ).Mul( amt ) )
 }
 
 // Vertex
 type Vertex struct {
 	Pos Vec4
-	Col Vec4
+	//Col Vec4
+	TexCoord Vec4
 }
 
 func (v Vertex) Transform( mat Mat4 ) Vertex {
-	return Vertex{ mat.Transform( v.Pos ), v.Col }
+	return Vertex{ mat.Transform( v.Pos ), /*v.Col,*/ v.TexCoord }
 }
 
 func (v Vertex) PerspectiveDivide() Vertex {
 	return Vertex{ Vec4{ v.Pos.X / v.Pos.W,
-		v.Pos.Y / v.Pos.W, v.Pos.Z / v.Pos.W, v.Pos.W }, v.Col }
+		v.Pos.Y / v.Pos.W, v.Pos.Z / v.Pos.W, v.Pos.W }, /*v.Col,*/ v.TexCoord }
 }
 
 func (v Vertex) TriangleArea2( b, c Vertex ) float32 {

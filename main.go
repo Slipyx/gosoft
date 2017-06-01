@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 	"math"
+	"math/rand"
 	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/sdl_ttf"
+	"github.com/veandco/go-sdl2/sdl_image"
 )
 
 var Rnd *sdl.Renderer
@@ -19,6 +21,9 @@ func main() {
 
 	sdl.Init( sdl.INIT_EVERYTHING )
 	ttf.Init()
+	img.Init( img.INIT_PNG | img.INIT_JPG )
+
+	rand.Seed( time.Now().UnixNano() )
 
 	win, err := sdl.CreateWindow( "-untitled-",
 		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
@@ -84,13 +89,23 @@ func main() {
 	bmdt := float32(0.0)
 
 	var trot float32 = 0
+	// random texture bitmap
+	tex := NewBitmap( 32, 32 )
+	for j := 0; j < tex.Height; j++ {
+		for i := 0; i < tex.Width; i++ {
+			tex.DrawPixel( i, j,
+				byte(rand.Intn(256)),
+				byte(rand.Intn(256)),
+				byte(rand.Intn(256)), 255 )
+		}
+	}
 	// perspective projection matrix
 	// aspect should be of the logical size
 	// which should be the 2d rt and also widescreen
 	// 3d rt can now be any arbritary size and
 	// automatically be corrected
 	var ProjMat Mat4
-	ProjMat.InitPerspective( math.Pi / 180.0 * 66,
+	ProjMat.InitPerspective( math.Pi / 180.0 * 66.0,
 		float32(VID2D_W) / VID2D_H, 0.1, 1000.0 )
 
 	// main loops
@@ -129,9 +144,9 @@ func main() {
 		ctx.Bm.Clear( 0x20 )
 
 		// vertices and transforms
-		v1 := Vertex{ Vec4{ 0, 1, 0, 1 }, Vec4{ 1, 0, 0, 1 } }
+		v1 := Vertex{ Vec4{ 0, 1, 0, 1 }, Vec4{ 0.5, 0, 0, 1 } }
 		v2 := Vertex{ Vec4{ -1, -1, 0, 1 }, Vec4{ 0, 1, 0, 1 } }
-		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 0, 0, 1, 1 } }
+		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
 
 		trot += 0.5 * dt
 		var transMat Mat4
@@ -142,7 +157,7 @@ func main() {
 		tform := ProjMat.Mul( transMat.Mul( rotMat ) )
 
 		ctx.FillTriangle( v1.Transform( tform ),
-			v2.Transform( tform ), v3.Transform( tform ) )
+			v2.Transform( tform ), v3.Transform( tform ), tex )
 
 		//stars.UpdateAndRender( ctx, dt )
 
@@ -178,6 +193,7 @@ func main() {
 
 	font0.Close()
 
+	img.Quit()
 	ttf.Quit()
 	sdl.Quit()
 }

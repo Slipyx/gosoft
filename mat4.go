@@ -13,7 +13,7 @@ func (m *Mat4) InitIdentity() {
 }
 
 func (m *Mat4) InitPerspective( fov, aspect, near, far float32 ) {
-	tanHalfFOV := float32(math.Tan( float64(fov / 2) ))
+	tanHalfFOV := float32(math.Tan( float64(fov) / 2.0 ))
 	zrange := near - far
 
 	m[0][0] = 1.0 / (tanHalfFOV * aspect); m[0][1] = 0; m[0][2] = 0; m[0][3] = 0

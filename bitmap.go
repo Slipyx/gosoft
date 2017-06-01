@@ -19,17 +19,27 @@ func NewBitmap( w, h int ) *Bitmap {
 	return nbm
 }
 
-func (self *Bitmap) Clear( shade byte ) {
-	for i := range self.Comp { self.Comp[i] = shade }
+func (b *Bitmap) Clear( shade byte ) {
+	for i := range b.Comp { b.Comp[i] = shade }
 }
 
 // DrawPixel is always r, g, b, a
-func (self *Bitmap) DrawPixel( x, y int, r, g, b, a byte ) {
-	ix := (y * self.Width + x) * 4
-	self.Comp[ix] = b
-	self.Comp[ix + 1] = g
-	self.Comp[ix + 2] = r
-	self.Comp[ix + 3] = a
+func (bm *Bitmap) DrawPixel( x, y int, r, g, b, a byte ) {
+	ix := (y * bm.Width + x) * 4
+	bm.Comp[ix] = b
+	bm.Comp[ix + 1] = g
+	bm.Comp[ix + 2] = r
+	bm.Comp[ix + 3] = a
+}
+
+func (bm *Bitmap) CopyPixel( dx, dy, sx, sy int, src *Bitmap ) {
+	dix := (dy * bm.Width + dx) * 4
+	six := (sy * src.Width + sx) * 4
+
+	bm.Comp[dix] = src.Comp[six]
+	bm.Comp[dix + 1] = src.Comp[six + 1]
+	bm.Comp[dix + 2] = src.Comp[six + 2]
+	bm.Comp[dix + 3] = src.Comp[six + 3]
 }
 
 const ( BM_MAX_SZ = 512 )

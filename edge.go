@@ -5,7 +5,9 @@ import ( "math" )
 type Edge struct {
 	x, xStep float32
 	yStart, yEnd int
-	col, colStep Vec4
+	//col, colStep Vec4
+	texCoordX, texCoordXStep float32
+	texCoordY, texCoordYStep float32
 }
 
 func NewEdge( grad Gradients, minY, maxY Vertex, minYIndex int ) Edge {
@@ -23,17 +25,31 @@ func NewEdge( grad Gradients, minY, maxY Vertex, minYIndex int ) Edge {
 
 	xPreStep := ne.x - minY.Pos.X
 
-	ne.col = grad.col[minYIndex].Add(
-		grad.colYStep.Mul( yPreStep ) ).Add(
-		grad.colXStep.Mul( xPreStep ) )
+	ne.texCoordX = grad.texCoordX[minYIndex] +
+		grad.texCoordXXStep * xPreStep +
+		grad.texCoordXYStep * yPreStep
 
-	ne.colStep = grad.colYStep.Add( grad.colXStep.Mul( ne.xStep ) )
+	ne.texCoordXStep = grad.texCoordXYStep + grad.texCoordXXStep * ne.xStep
+
+	ne.texCoordY = grad.texCoordY[minYIndex] +
+		grad.texCoordYXStep * xPreStep +
+		grad.texCoordYYStep * yPreStep
+
+	ne.texCoordYStep = grad.texCoordYYStep + grad.texCoordYXStep * ne.xStep
+
+	//ne.col = grad.col[minYIndex].Add(
+		//grad.colYStep.Mul( yPreStep ) ).Add(
+		//grad.colXStep.Mul( xPreStep ) )
+
+	//ne.colStep = grad.colYStep.Add( grad.colXStep.Mul( ne.xStep ) )
 
 	return ne
 }
 
 func (e *Edge) Step() {
 	e.x += e.xStep
-	e.col = e.col.Add( e.colStep )
+	e.texCoordX += e.texCoordXStep
+	e.texCoordY += e.texCoordYStep
+	//e.col = e.col.Add( e.colStep )
 }
 
