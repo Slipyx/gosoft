@@ -29,6 +29,14 @@ func CreateRenderContext() *RenderContext {
 	return ctx
 }
 
+func (r *RenderContext) DrawMesh( mesh *Mesh, transform Mat4, texture *Bitmap ) {
+	for i := 0; i < len( mesh.Indices ); i += 3 {
+		r.FillTriangle( mesh.Vertices[mesh.Indices[i]].Transform( transform ),
+			mesh.Vertices[mesh.Indices[i + 1]].Transform( transform ),
+			mesh.Vertices[mesh.Indices[i + 2]].Transform( transform ), texture )
+	}
+}
+
 func (r *RenderContext) FillTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
 	var sstf Mat4;
 	sstf.InitScreenSpaceTransform( float32(r.Bm.Width) / 2.0, float32(r.Bm.Height) / 2.0 )
@@ -36,6 +44,8 @@ func (r *RenderContext) FillTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
 	minY := v1.Transform( sstf ).PerspectiveDivide()
 	midY := v2.Transform( sstf ).PerspectiveDivide()
 	maxY := v3.Transform( sstf ).PerspectiveDivide()
+
+	if minY.TriangleArea2( maxY, midY ) >= 0 { return }
 
 	if maxY.Pos.Y < midY.Pos.Y { maxY, midY = midY, maxY }
 	if midY.Pos.Y < minY.Pos.Y { midY, minY = minY, midY }
