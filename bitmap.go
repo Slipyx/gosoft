@@ -2,11 +2,14 @@ package main
 
 import (
 	"unsafe"
+
+	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/sdl_image"
 )
 
-// components are BGRA
-// to be used for an RGB sdl texture.update
-// endian pls
+// internal components are BGRA
+// compatible when directly copying from
+// an (A)RGB sdl surface or texture
 type Bitmap struct {
 	Width int
 	Height int
@@ -17,6 +20,22 @@ func NewBitmap( w, h int ) *Bitmap {
 	nbm := &Bitmap{ w, h, nil }
 	nbm.Comp = make( []byte, w * h * 4 )
 	return nbm
+}
+
+// use sdl_image to load a surface from file
+// and convert to Bitmap
+func NewBitmapFromFile( file string ) *Bitmap {
+	tImg, _ := img.Load( "./hdr.png" )
+	// ensure pixel format will be compatible when
+	// copying directly to Bitmap's component array
+	texImg, _ := tImg.ConvertFormat( sdl.PIXELFORMAT_ARGB8888, 0 )
+	tImg.Free()
+
+	tex := NewBitmap( int(texImg.W), int(texImg.H) )
+	copy( tex.Comp, texImg.Pixels() )
+	texImg.Free()
+
+	return tex
 }
 
 func (b *Bitmap) Clear( shade byte ) {
@@ -60,4 +79,3 @@ func (self *Bitmap) CopyToPtr( dst unsafe.Pointer ) {
 	//bmtest.CopyToPtr( pptr )
 	//bmtex.Unlock()
 }
-

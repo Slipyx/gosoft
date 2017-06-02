@@ -27,7 +27,7 @@ func main() {
 
 	win, err := sdl.CreateWindow( "-untitled-",
 		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		960, 540, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE )
+		640, 360, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE )
 
 	if err != nil { panic( err ) }
 	defer win.Destroy()
@@ -63,9 +63,6 @@ func main() {
 	defer fpsTxt.texture.Destroy()
 	fpsTxt.color = sdl.Color{ 0, 255, 0, 255 }
 
-	rp := Vec2{ 8, 8 }
-	rect := sdl.Rect{ int32(rp.X), int32(rp.Y), 32, 32 }
-
 	// create and initialize 3d render context
 	// uses const VID dimensions
 	ctx := CreateRenderContext()
@@ -81,24 +78,16 @@ func main() {
 	// game view pos
 	//gv := Vec2{0, 0}
 
-	fpsTmr := time.Now()
-
 	theTime := float32(0.0)
 	var evt sdl.Event
 	ftmr := time.Now()
+	fpsTmr := time.Now()
 	bmdt := float32(0.0)
 
 	var trot float32 = 0
-	// random texture bitmap
-	tex := NewBitmap( 32, 32 )
-	for j := 0; j < tex.Height; j++ {
-		for i := 0; i < tex.Width; i++ {
-			tex.DrawPixel( i, j,
-				byte(rand.Intn(256)),
-				byte(rand.Intn(256)),
-				byte(rand.Intn(256)), 255 )
-		}
-	}
+	// texture bitmap
+	tex := NewBitmapFromFile( "./hdr.png" )
+
 	// perspective projection matrix
 	// aspect should be of the logical size
 	// which should be the 2d rt and also widescreen
@@ -125,25 +114,18 @@ func main() {
 		}
 
 		if time.Since( fpsTmr ).Seconds() > 0.1 {
-			fpsTxt.SetString( fmt.Sprintf( "%.4g / %.4gms",
-				1.0 / dt, bmdt ) )
+			fpsTxt.SetString( fmt.Sprintf( "%.4g - %.4gms",
+				dt * 1000, bmdt ) )
 			fpsTmr = time.Now()
 		}
-
-		rp.X = float32(math.Cos( float64(theTime) ) * 64 + 320)
-		rp.Y = float32(math.Sin( float64(theTime) ) * 64 + 200)
-
-		rect.X = int32(rp.X); rect.Y = int32(rp.Y)
-
-		// fmt.Printf( "%g\n", dt )
 
 		// do drawing to 3d render context bitmap buffer
 		// and then update bitmap texture with comp array
 		bmdrtmr := time.Now()
 
-		ctx.Bm.Clear( 0x20 )
+		ctx.Bm.Clear( 0x10 )
 
-		// vertices and transforms
+		// mesh vertices and transform
 		v1 := Vertex{ Vec4{ 0, 1, 0, 1 }, Vec4{ 0.5, 0, 0, 1 } }
 		v2 := Vertex{ Vec4{ -1, -1, 0, 1 }, Vec4{ 0, 1, 0, 1 } }
 		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
@@ -170,17 +152,14 @@ func main() {
 		Rnd.SetDrawColor( 0, 0, 0, 0 )
 		Rnd.Clear()
 
-		// game view
-		//Rnd.SetViewport( &sdl.Rect{ int32(gv.X), int32(gv.Y), VID_W, VID_H } )
-
-		Rnd.SetDrawColor( 255, 255, 255, 255 )
-		Rnd.FillRect( &rect )
+		Rnd.SetDrawColor( 255, 127, 0, 127 )
+		Rnd.FillRect( &sdl.Rect{ 4, 100, 32, 32 } )
 
 		// hud/ui view
 		//Rnd.SetViewport( &sdl.Rect{ 0, 0, VID_W, VID_H } )
 		fpsTxt.Draw( Rnd, 8, 8 )
 
-		// copy final rts to backbuffer
+		// copy final render textures to backbuffer
 		Rnd.SetRenderTarget( nil )
 		Rnd.SetDrawColor( 0, 0, 0, 255 )
 		Rnd.Clear()
