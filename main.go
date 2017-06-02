@@ -27,7 +27,7 @@ func main() {
 
 	win, err := sdl.CreateWindow( "-untitled-",
 		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		640, 360, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE )
+		960, 540, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE )
 
 	if err != nil { panic( err ) }
 	defer win.Destroy()
@@ -126,20 +126,26 @@ func main() {
 		ctx.Bm.Clear( 0x10 )
 
 		// mesh vertices and transform
-		v1 := Vertex{ Vec4{ 0, 1, 0, 1 }, Vec4{ 0.5, 0, 0, 1 } }
+		v1 := Vertex{ Vec4{ -1, 1, 0, 1 }, Vec4{ 0, 0, 0, 1 } }
 		v2 := Vertex{ Vec4{ -1, -1, 0, 1 }, Vec4{ 0, 1, 0, 1 } }
 		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
+
+		v21 := Vertex{ Vec4{ -1, 1, 0, 1 }, Vec4{ 0, 0, 0, 1 } }
+		v22 := Vertex{ Vec4{ 1, 1, 0, 1 }, Vec4{ 1, 0, 0, 1 } }
+		v23 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
 
 		trot += 0.5 * dt
 		var transMat Mat4
 		transMat.InitTranslation( 0, 0, 3 )
 		var rotMat Mat4
-		rotMat.InitRotation( 0, trot, 0 )
+		rotMat.InitRotation( 0, trot, trot )
 
 		tform := ProjMat.Mul( transMat.Mul( rotMat ) )
 
 		ctx.FillTriangle( v1.Transform( tform ),
 			v2.Transform( tform ), v3.Transform( tform ), tex )
+		ctx.FillTriangle( v21.Transform( tform ),
+			v22.Transform( tform ), v23.Transform( tform ), tex )
 
 		//stars.UpdateAndRender( ctx, dt )
 

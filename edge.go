@@ -8,6 +8,8 @@ type Edge struct {
 	//col, colStep Vec4
 	texCoordX, texCoordXStep float32
 	texCoordY, texCoordYStep float32
+	// perspective
+	oneOverZ, oneOverZStep float32
 }
 
 func NewEdge( grad Gradients, minY, maxY Vertex, minYIndex int ) Edge {
@@ -37,6 +39,12 @@ func NewEdge( grad Gradients, minY, maxY Vertex, minYIndex int ) Edge {
 
 	ne.texCoordYStep = grad.texCoordYYStep + grad.texCoordYXStep * ne.xStep
 
+	// perspective
+	ne.oneOverZ = grad.oneOverZ[minYIndex] +
+		grad.oneOverZXStep * xPreStep +
+		grad.oneOverZYStep * yPreStep
+	ne.oneOverZStep = grad.oneOverZYStep + grad.oneOverZXStep * ne.xStep
+
 	//ne.col = grad.col[minYIndex].Add(
 		//grad.colYStep.Mul( yPreStep ) ).Add(
 		//grad.colXStep.Mul( xPreStep ) )
@@ -50,6 +58,8 @@ func (e *Edge) Step() {
 	e.x += e.xStep
 	e.texCoordX += e.texCoordXStep
 	e.texCoordY += e.texCoordYStep
+	// perspective
+	e.oneOverZ += e.oneOverZStep
 	//e.col = e.col.Add( e.colStep )
 }
 
