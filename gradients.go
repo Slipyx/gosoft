@@ -9,6 +9,9 @@ type Gradients struct {
 	// perspective
 	oneOverZ []float32
 	oneOverZXStep, oneOverZYStep float32
+	// depth
+	depth []float32
+	depthXStep, depthYStep float32
 }
 
 func NewGradients( minY, midY, maxY Vertex ) Gradients {
@@ -52,6 +55,16 @@ func NewGradients( minY, midY, maxY Vertex ) Gradients {
 	ng.texCoordXYStep = CalcYStep( ng.texCoordX, minY, midY, maxY, oneOverDY )
 	ng.texCoordYXStep = CalcXStep( ng.texCoordY, minY, midY, maxY, oneOverDX )
 	ng.texCoordYYStep = CalcYStep( ng.texCoordY, minY, midY, maxY, oneOverDY )
+
+	// depth
+	ng.depth = make( []float32, 3 )
+
+	ng.depth[0] = minY.Pos.Z
+	ng.depth[1] = midY.Pos.Z
+	ng.depth[2] = maxY.Pos.Z
+
+	ng.depthXStep = CalcXStep( ng.depth, minY, midY, maxY, oneOverDX )
+	ng.depthYStep = CalcYStep( ng.depth, minY, midY, maxY, oneOverDY )
 
 	/*ng.colXStep = (((ng.col[1].Sub( ng.col[2] )).Mul(
 		(minY.Pos.Y - maxY.Pos.Y))).Sub( ((ng.col[0].Sub(

@@ -86,7 +86,10 @@ func main() {
 
 	var trot float32 = 0
 	// texture bitmap
-	tex := NewBitmapFromFile( "./hdr.png" )
+	tex := NewBitmapFromFile( "./tex.png" )
+	//toptex := NewBitmapFromFile( "./top.png" )
+	// obj mesh
+	objmesh := LoadOBJMesh( "./mesh.obj" )
 
 	// perspective projection matrix
 	// aspect should be of the logical size
@@ -94,7 +97,7 @@ func main() {
 	// 3d rt can now be any arbritary size and
 	// automatically be corrected
 	var ProjMat Mat4
-	ProjMat.InitPerspective( math.Pi / 180.0 * 66.0,
+	ProjMat.InitPerspective( math.Pi / 180.0 * 70.0,
 		float32(VID2D_W) / VID2D_H, 0.1, 1000.0 )
 
 	// main loops
@@ -124,28 +127,33 @@ func main() {
 		bmdrtmr := time.Now()
 
 		ctx.Bm.Clear( 0x10 )
+		ctx.ClearDepthBuffer()
 
+		// front face is CW
 		// mesh vertices and transform
-		v1 := Vertex{ Vec4{ -1, 1, 0, 1 }, Vec4{ 0, 0, 0, 1 } }
-		v2 := Vertex{ Vec4{ -1, -1, 0, 1 }, Vec4{ 0, 1, 0, 1 } }
-		v3 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
+		/*meshPlane0 := NewMesh()
 
-		v21 := Vertex{ Vec4{ -1, 1, 0, 1 }, Vec4{ 0, 0, 0, 1 } }
-		v22 := Vertex{ Vec4{ 1, 1, 0, 1 }, Vec4{ 1, 0, 0, 1 } }
-		v23 := Vertex{ Vec4{ 1, -1, 0, 1 }, Vec4{ 1, 1, 0, 1 } }
+		meshPlane0.Vertices = append( meshPlane0.Vertices,
+				Vertex{ Vec4{ -1, 0, 1, 1 }, Vec4{ 0, 0, 0, 1 } },
+				Vertex{ Vec4{ 1, 0, 1, 1 }, Vec4{ 1, 0, 0, 1 } },
+				Vertex{ Vec4{ 1, 0, -1, 1 }, Vec4{ 1, 1, 0, 1 } },
+				Vertex{ Vec4{ -1, 0, -1, 1 }, Vec4{ 0, 1, 0, 1 } } )
 
-		trot += 0.5 * dt
+		meshPlane0.Indices = append( meshPlane0.Indices, 0, 1, 2, 0, 2, 3 )*/
+
+		trot += dt
+		var scaleMat Mat4
 		var transMat Mat4
-		transMat.InitTranslation( 0, 0, 3 )
 		var rotMat Mat4
-		rotMat.InitRotation( 0, trot, trot )
+		scaleMat.InitScale( 1, 1, 1 )
+		transMat.InitTranslation( 0, 0, 3 )
+		rotMat.InitRotation( trot, 0, trot )
 
-		tform := ProjMat.Mul( transMat.Mul( rotMat ) )
+		tform := transMat.Mul( rotMat.Mul( scaleMat ) )
 
-		ctx.FillTriangle( v1.Transform( tform ),
-			v2.Transform( tform ), v3.Transform( tform ), tex )
-		ctx.FillTriangle( v21.Transform( tform ),
-			v22.Transform( tform ), v23.Transform( tform ), tex )
+		//ctx.DrawMesh( meshPlane0, ProjMat.Mul( tform ), tex )
+
+		ctx.DrawMesh( objmesh, ProjMat.Mul( tform ), tex )
 
 		//stars.UpdateAndRender( ctx, dt )
 

@@ -11,6 +11,7 @@ import (
 type OBJMesh struct {
 	v []Vec4
 	vt []Vec4
+
 	f [][3]int
 }
 
@@ -42,7 +43,9 @@ func LoadOBJMesh( file string ) *Mesh {
 		if err != nil { break }
 		objFlds := strings.Fields( objLine )
 
-		if len(objFlds) > 0 && objFlds[0] == "v" {
+		if len( objFlds ) == 0 { continue }
+
+		if objFlds[0] == "v" {
 			var v Vec4
 			var ffloat float64
 
@@ -57,24 +60,23 @@ func LoadOBJMesh( file string ) *Mesh {
 			om.v = append( om.v, v )
 		}
 
-		if len(objFlds) > 0 && objFlds[0] == "vt" {
+		if objFlds[0] == "vt" {
 			var vtx, vty float64
 
 			vtx, _ = strconv.ParseFloat( objFlds[1], 32 )
 			vty, _ = strconv.ParseFloat( objFlds[2], 32 )
-			// normalize coords
-			for vtx < 0 { vtx += 1 }
+			/*for vtx < 0 { vtx += 1 }
 			for vtx > 1 { vtx -= 1 }
 			for vty < 0 { vty += 1 }
-			for vty > 1 { vty -= 1 }
+			for vty > 1 { vty -= 1 }*/
 			vty = 1 - vty
-			vtx = 1 - vtx
+			//vtx = 1 - vtx
 
 			om.vt = append( om.vt, Vec4{ float32(vtx), float32(vty), 0, 1 } )
 		}
 
 		// 1 based index
-		if len(objFlds) > 0 && objFlds[0] == "f" {
+		if objFlds[0] == "f" {
 			var f [3][3]int
 
 			fsplit := strings.Split( objFlds[1], "/" )
@@ -117,15 +119,19 @@ func LoadOBJMesh( file string ) *Mesh {
 	m.Vertices = make( []Vertex, len( om.v ) )
 	m.Indices = make( []int, len( om.f ) )
 
+	// TRY THIS BRO
+	// go through each om.f first
+
+	// assign vertex positions
 	for i := 0; i < len( m.Vertices ); i++ {
-		m.Vertices[i] = Vertex{ om.v[i], om.vt[i] }
+		m.Vertices[i] = Vertex{ om.v[i], Vec4{0,0,0,1} }
 	}
 
-	// adjust tc's
+	// assign tc's
 	for i := 0; i < len( om.f ); i += 3 {
-		m.Vertices[om.f[i][0] - 1].TexCoord = om.vt[om.f[i][1]-1]
-		m.Vertices[om.f[i + 1][0] - 1].TexCoord = om.vt[om.f[i + 1][1]-1]
-		m.Vertices[om.f[i + 2][0] - 1].TexCoord = om.vt[om.f[i + 2][1]-1]
+		m.Vertices[om.f[i][0] - 1].TexCoord = om.vt[om.f[i][1] - 1]
+		m.Vertices[om.f[i + 1][0] - 1].TexCoord = om.vt[om.f[i + 1][1] - 1]
+		m.Vertices[om.f[i + 2][0] - 1].TexCoord = om.vt[om.f[i + 2][1] - 1]
 	}
 
 	// copy indices

@@ -8,7 +8,7 @@ import (
 const (
 	// 3d rt
 	VID_W = 320
-	VID_H = 200
+	VID_H = 224
 
 	// 2d rt
 	VID2D_W = 640
@@ -18,6 +18,8 @@ const (
 // render context
 type RenderContext struct {
 	Bm *Bitmap
+	zBuffer []float32
+	sstf Mat4
 }
 
 // creates and initializes new 3d render context
@@ -26,7 +28,17 @@ func CreateRenderContext() *RenderContext {
 	fmt.Println( "new ctx bro" )
 	ctx := &RenderContext{}
 	ctx.Bm = NewBitmap( VID_W, VID_H )
+
+	ctx.zBuffer = make( []float32, ctx.Bm.Width * ctx.Bm.Height )
+
+	ctx.sstf.InitScreenSpaceTransform(
+		float32(ctx.Bm.Width) / 2.0, float32(ctx.Bm.Height) / 2.0 )
+
 	return ctx
+}
+
+func (r *RenderContext) ClearDepthBuffer() {
+	for i := range r.zBuffer { r.zBuffer[i] = math.MaxFloat32 }
 }
 
 func (r *RenderContext) DrawMesh( mesh *Mesh, transform Mat4, texture *Bitmap ) {
@@ -38,12 +50,12 @@ func (r *RenderContext) DrawMesh( mesh *Mesh, transform Mat4, texture *Bitmap ) 
 }
 
 func (r *RenderContext) FillTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
-	var sstf Mat4;
-	sstf.InitScreenSpaceTransform( float32(r.Bm.Width) / 2.0, float32(r.Bm.Height) / 2.0 )
+	//var sstf Mat4;
+	//sstf.InitScreenSpaceTransform( float32(r.Bm.Width) / 2.0, float32(r.Bm.Height) / 2.0 )
 
-	minY := v1.Transform( sstf ).PerspectiveDivide()
-	midY := v2.Transform( sstf ).PerspectiveDivide()
-	maxY := v3.Transform( sstf ).PerspectiveDivide()
+	minY := v1.Transform( r.sstf ).PerspectiveDivide()
+	midY := v2.Transform( r.sstf ).PerspectiveDivide()
+	maxY := v3.Transform( r.sstf ).PerspectiveDivide()
 
 	if minY.TriangleArea2( maxY, midY ) >= 0 { return }
 
@@ -65,24 +77,33 @@ func (r *RenderContext) DrawScanLine( left, right Edge, j int, texture *Bitmap )
 	texCoordXXStep := (right.texCoordX - left.texCoordX) / xDist
 	texCoordYXStep := (right.texCoordY - left.texCoordY) / xDist
 	oneOverZXStep := (right.oneOverZ - left.oneOverZ) / xDist
+	depthXStep := (right.depth - left.depth) / xDist
 
 	texCoordX := left.texCoordX + texCoordXXStep * xPreStep
 	texCoordY := left.texCoordY + texCoordYXStep * xPreStep
 	oneOverZ := left.oneOverZ + oneOverZXStep * xPreStep
+	depth := left.depth + depthXStep * xPreStep
 
 	//minCol := left.col.Add( grad.colXStep.Mul( xPreStep ) )
 	//maxCol := right.col.Add( grad.colXStep.Mul( xPreStep ) )
 
 	for i := xmin; i < xmax; i++ {
-		z := 1.0 / oneOverZ
-		srcX := int((texCoordX * z) * float32(texture.Width - 1) + 0.5)
-		srcY := int((texCoordY * z) * float32(texture.Height - 1) + 0.5)
+		zindex := j * r.Bm.Width + i
 
-		r.Bm.CopyPixel( i, j, srcX, srcY, texture )
+		if depth < r.zBuffer[zindex] {
+			r.zBuffer[zindex] = depth
+
+			z := 1.0 / oneOverZ
+			srcX := int((texCoordX * z) * float32(texture.Width - 1) + 0.5)
+			srcY := int((texCoordY * z) * float32(texture.Height - 1) + 0.5)
+
+			r.Bm.CopyPixel( i, j, srcX, srcY, texture )
+		}
 
 		texCoordX += texCoordXXStep
 		texCoordY += texCoordYXStep
 		oneOverZ += oneOverZXStep
+		depth += depthXStep
 	}
 }
 
@@ -103,16 +124,16 @@ func (r *RenderContext) ScanTriangle( minY, midY, maxY Vertex, hand bool, textur
 // passed in edges need to be mutable so it can continue
 // on subsequent calls
 func (r *RenderContext) ScanEdges( a, b *Edge, hand bool, texture *Bitmap ) {
-	//var left *Edge = a
-	//var right *Edge = b
+	var left *Edge = a
+	var right *Edge = b
 
-	yStart, yEnd := b.yStart, b.yEnd
+	//yStart, yEnd := b.yStart, b.yEnd
 
-	if hand { a, b = b, a }
+	if hand { left, right = right, left }
 
-	for j := yStart; j < yEnd; j++ {
-		r.DrawScanLine( *a, *b, j, texture )
-		a.Step()
-		b.Step()
+	for j := b.yStart; j < b.yEnd; j++ {
+		r.DrawScanLine( *left, *right, j, texture )
+		left.Step()
+		right.Step()
 	}
 }
