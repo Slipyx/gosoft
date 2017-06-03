@@ -25,7 +25,7 @@ func NewBitmap( w, h int ) *Bitmap {
 // use sdl_image to load a surface from file
 // and convert to Bitmap
 func NewBitmapFromFile( file string ) *Bitmap {
-	tImg, _ := img.Load( "./hdr.png" )
+	tImg, _ := img.Load( file )
 	// ensure pixel format will be compatible when
 	// copying directly to Bitmap's component array
 	texImg, _ := tImg.ConvertFormat( sdl.PIXELFORMAT_ARGB8888, 0 )
