@@ -147,15 +147,13 @@ func main() {
 		var transMat Mat4
 		var rotMat Mat4
 		var scaleMat Mat4
-		transMat.InitTranslation( 0, 0, 3 )
-		rotMat.InitRotation( trot, 0, trot )
+		transMat.InitTranslation( 0, 0, 3.5 - float32(math.Sin(float64(trot/4.0))*4) )
+		rotMat.InitRotation( trot/2, 0, trot/2 )
 		scaleMat.InitScale( 1, 1, 1 )
 
 		tform := transMat.Mul( rotMat.Mul( scaleMat ) )
 
-		//ctx.DrawMesh( meshPlane0, ProjMat.Mul( tform ), tex )
-
-		ctx.DrawMesh( objmesh, ProjMat.Mul( tform ), tex )
+		objmesh.Draw( ctx, ProjMat.Mul( tform ), tex )
 
 		//stars.UpdateAndRender( ctx, dt )
 

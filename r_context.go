@@ -41,11 +41,67 @@ func (r *RenderContext) ClearDepthBuffer() {
 	for i := range r.zBuffer { r.zBuffer[i] = math.MaxFloat32 }
 }
 
-func (r *RenderContext) DrawMesh( mesh *Mesh, transform Mat4, texture *Bitmap ) {
-	for i := 0; i < len( mesh.Indices ); i += 3 {
-		r.FillTriangle( mesh.Vertices[mesh.Indices[i]].Transform( transform ),
-			mesh.Vertices[mesh.Indices[i + 1]].Transform( transform ),
-			mesh.Vertices[mesh.Indices[i + 2]].Transform( transform ), texture )
+func (r *RenderContext) DrawTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
+	v1In := v1.IsInViewFrustum()
+	v2In := v2.IsInViewFrustum()
+	v3In := v3.IsInViewFrustum()
+
+	if v1In && v2In && v3In {
+		r.FillTriangle( v1, v2, v3, texture )
+		return
+	}
+
+	if !v1In && !v2In && !v3In { return }
+
+	vertices := make( []Vertex, 0 )
+	auxList := make( []Vertex, 0 )
+
+	vertices = append( vertices, v1, v2, v3 )
+
+	if ClipPolygonAxis( &vertices, &auxList, 0 ) &&
+		ClipPolygonAxis( &vertices, &auxList, 1 ) &&
+		ClipPolygonAxis( &vertices, &auxList, 2 ) {
+		iVert := vertices[0]
+
+		for i := 1; i < len( vertices ) - 1; i++ {
+			r.FillTriangle( iVert, vertices[i], vertices[i + 1], texture )
+		}
+	}
+}
+
+func ClipPolygonAxis( vertices, auxList *[]Vertex, compIndex int ) bool {
+	ClipPolygonComponent( vertices, compIndex, 1, auxList )
+	*vertices = nil
+
+	if len( *auxList ) == 0 { return false }
+
+	ClipPolygonComponent( auxList, compIndex, -1, vertices )
+	*auxList = nil
+
+	return !(len( *vertices ) == 0)
+}
+
+func ClipPolygonComponent( vertices *[]Vertex, compIndex int, compFactor float32, result *[]Vertex ) {
+	pVertex := (*vertices)[len( *vertices ) - 1]
+	pComp := pVertex.GetPosI( compIndex ) * compFactor
+	pInside := pComp <= pVertex.Pos.W
+
+	for _, v := range *vertices {
+		cComp := v.GetPosI( compIndex ) * compFactor
+		cInside := cComp <= v.Pos.W
+
+		if cInside != pInside {
+			lerpAmt := (pVertex.Pos.W - pComp) / ((pVertex.Pos.W - pComp) - (v.Pos.W - cComp))
+			*result = append( *result, pVertex.Lerp( v, lerpAmt ) )
+		}
+
+		if cInside {
+			*result = append( *result, v )
+		}
+
+		pVertex = v
+		pComp = cComp
+		pInside = cInside
 	}
 }
 

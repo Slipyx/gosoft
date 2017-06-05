@@ -1,5 +1,7 @@
 package main
 
+import ( "math" )
+
 // Vector
 type Vec2 struct {
 	X, Y float32
@@ -45,6 +47,12 @@ func (v Vertex) PerspectiveDivide() Vertex {
 		v.Pos.Y / v.Pos.W, v.Pos.Z / v.Pos.W, v.Pos.W }, /*v.Col,*/ v.TexCoord }
 }
 
+func (v Vertex) IsInViewFrustum() bool {
+	return math.Abs( float64(v.Pos.X) ) <= math.Abs( float64(v.Pos.W) ) &&
+		math.Abs( float64(v.Pos.Y) ) <= math.Abs( float64(v.Pos.W) ) &&
+		math.Abs( float64(v.Pos.Z) ) <= math.Abs( float64(v.Pos.W) )
+}
+
 func (v Vertex) TriangleArea2( b, c Vertex ) float32 {
 	x1 := b.Pos.X - v.Pos.X
 	y1 := b.Pos.Y - v.Pos.Y
@@ -52,5 +60,19 @@ func (v Vertex) TriangleArea2( b, c Vertex ) float32 {
 	y2 := c.Pos.Y - v.Pos.Y
 
 	return x1 * y2 - x2 * y1
+}
+
+func (v Vertex) Lerp( other Vertex, amt float32 )  Vertex {
+	return Vertex{ v.Pos.Lerp( other.Pos, amt ), v.TexCoord.Lerp( other.TexCoord, amt ) }
+}
+
+func (v Vertex) GetPosI( i int ) float32 {
+	switch i {
+	case 0: return v.Pos.X
+	case 1: return v.Pos.Y
+	case 2: return v.Pos.Z
+	case 3: return v.Pos.W
+	default: panic( "GetPosI invalid index" )
+	}
 }
 

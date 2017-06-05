@@ -16,3 +16,11 @@ func NewMesh() *Mesh {
 	return m
 }
 
+func (m *Mesh) Draw( ctx *RenderContext, transform Mat4, texture *Bitmap ) {
+	for i := 0; i < len( m.Indices ); i += 3 {
+		ctx.DrawTriangle( m.Vertices[m.Indices[i]].Transform( transform ),
+			m.Vertices[m.Indices[i + 1]].Transform( transform ),
+			m.Vertices[m.Indices[i + 2]].Transform( transform ), texture )
+	}
+}
+

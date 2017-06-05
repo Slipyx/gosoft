@@ -12,7 +12,22 @@ type OBJMesh struct {
 	v []Vec4
 	vt []Vec4
 
-	f [][3]int
+	// v/vt/vn v/vt/vn v/vt/vn
+	f [][3][3]int
+}
+
+func OBJVHash( v [3]int ) int {
+	res := 17
+	res = 31 * res + v[0]
+	res = 31 * res + v[1]
+	res = 31 * res + v[2]
+	return res
+}
+
+// what even
+type Vinf struct {
+	vi int
+	vert *Vertex
 }
 
 // load an obj file and convert to indexed Mesh
@@ -22,7 +37,7 @@ func LoadOBJMesh( file string ) *Mesh {
 
 	om.v = make( []Vec4, 0 )
 	om.vt = make( []Vec4, 0 )
-	om.f = make( [][3]int, 0 )
+	om.f = make( [][3][3]int, 0 )
 
 	objFile, err := os.Open( file )
 	if err != nil { panic( err ) }
@@ -34,8 +49,7 @@ func LoadOBJMesh( file string ) *Mesh {
 
 	// assumptions:
 	// len of om.f should be multiple of 3
-	// len of om.v and om.vt should be equal
-	// no mtl, multitexture
+	// no mtl, multitexture, NO QUADS
 
 	for true {
 		var objLine string
@@ -109,39 +123,36 @@ func LoadOBJMesh( file string ) *Mesh {
 				f[2][2], _ = strconv.Atoi( fsplit[2] )
 			}
 
-			om.f = append( om.f, f[0], f[1], f[2] )
+			om.f = append( om.f, f )
 		}
 	}
 
 	// convert to indexed Mesh
 	m := &Mesh{}
 
-	m.Vertices = make( []Vertex, len( om.v ) )
-	m.Indices = make( []int, len( om.f ) )
+	m.Vertices = make( []Vertex, 0 )
+	m.Indices = make( []int, 0 )
+	vi := 0
 
-	// TRY THIS BRO
-	// go through each om.f first
+	objVMap := make( map[int]*Vinf )
 
-	// assign vertex positions
-	for i := 0; i < len( m.Vertices ); i++ {
-		m.Vertices[i] = Vertex{ om.v[i], Vec4{0,0,0,1} }
-	}
-
-	// assign tc's
-	for i := 0; i < len( om.f ); i += 3 {
-		m.Vertices[om.f[i][0] - 1].TexCoord = om.vt[om.f[i][1] - 1]
-		m.Vertices[om.f[i + 1][0] - 1].TexCoord = om.vt[om.f[i + 1][1] - 1]
-		m.Vertices[om.f[i + 2][0] - 1].TexCoord = om.vt[om.f[i + 2][1] - 1]
-	}
-
-	// copy indices
-	for i := 0; i < len( m.Indices ); i += 3 {
-		m.Indices[i] = om.f[i][0] - 1
-		m.Indices[i + 1] = om.f[i + 1][0] - 1
-		m.Indices[i + 2] = om.f[i + 2][0] - 1
+	for _, f := range om.f {
+		for _, v := range f {
+			hash := OBJVHash( v )
+			if objVMap[hash] == nil {
+				vert := Vertex{ om.v[ v[0] - 1 ], om.vt[ v[1] - 1 ] }
+				m.Vertices = append( m.Vertices, vert )
+				objVMap[hash] = &Vinf{ vi, &vert }
+				m.Indices = append( m.Indices, vi )
+				vi += 1
+			} else {
+				m.Indices = append( m.Indices, objVMap[hash].vi )
+			}
+		}
 	}
 
 	fmt.Printf( "%v\n", m.Vertices[m.Indices[0]] )
 
 	return m
 }
+
