@@ -27,7 +27,7 @@ func main() {
 
 	win, err := sdl.CreateWindow( "-untitled-",
 		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		960, 540, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE )
+		960, 540, sdl.WINDOW_SHOWN | sdl.WINDOW_RESIZABLE | sdl.WINDOW_OPENGL )
 
 	if err != nil { panic( err ) }
 	defer win.Destroy()
@@ -96,8 +96,10 @@ func main() {
 	// which should be the 2d rt and also widescreen
 	// 3d rt can now be any arbritary size and
 	// automatically be corrected
+	aspect := float32(VID_W) / float32(VID_H)
+	fovH := float32(90) // degrees
 	var ProjMat Mat4
-	ProjMat.InitPerspective( math.Pi / 180.0 * 70.0,
+	ProjMat.InitPerspective( (math.Pi / 180.0) * (fovH * (1.0 / aspect)),
 		float32(VID2D_W) / VID2D_H, 0.1, 1000.0 )
 
 	// main loops
@@ -142,12 +144,12 @@ func main() {
 		meshPlane0.Indices = append( meshPlane0.Indices, 0, 1, 2, 0, 2, 3 )*/
 
 		trot += dt
-		var scaleMat Mat4
 		var transMat Mat4
 		var rotMat Mat4
-		scaleMat.InitScale( 1, 1, 1 )
+		var scaleMat Mat4
 		transMat.InitTranslation( 0, 0, 3 )
 		rotMat.InitRotation( trot, 0, trot )
+		scaleMat.InitScale( 1, 1, 1 )
 
 		tform := transMat.Mul( rotMat.Mul( scaleMat ) )
 
@@ -160,26 +162,27 @@ func main() {
 		bmtex.Update( nil, unsafe.Pointer(&ctx.Bm.Comp[0]), ctx.Bm.Width * 4 )
 		bmdt = float32(time.Since( bmdrtmr ).Seconds() * 1000)
 
-		// pure sdl 2d drawing
 		// set 2d rt for drawing to
 		Rnd.SetRenderTarget( rndTex )
-		Rnd.SetDrawColor( 0, 0, 0, 0 )
-		Rnd.Clear()
+		//Rnd.SetDrawColor( 255, 0, 255, 0 )
+		//Rnd.Clear()
 
-		Rnd.SetDrawColor( 255, 127, 0, 127 )
+		// copy 3d framebuffer first to entire render texture
+		Rnd.Copy( bmtex, nil, nil )
+
+		// now do sdl's 2d drawing over the 3d buffer
+		Rnd.SetDrawColor( 255, 127, 0, 64 )
 		Rnd.FillRect( &sdl.Rect{ 4, 100, 32, 32 } )
 
 		// hud/ui view
 		//Rnd.SetViewport( &sdl.Rect{ 0, 0, VID_W, VID_H } )
 		fpsTxt.Draw( Rnd, 8, 8 )
 
-		// copy final render textures to backbuffer
+		// copy final render texture to display
 		Rnd.SetRenderTarget( nil )
 		Rnd.SetDrawColor( 0, 0, 0, 255 )
 		Rnd.Clear()
-		// 3d rt
-		Rnd.Copy( bmtex, nil, nil )
-		// 2d rt
+		// rt
 		Rnd.Copy( rndTex, nil, nil )
 		Rnd.Present()
 	}
