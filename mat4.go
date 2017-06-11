@@ -29,6 +29,9 @@ func (m *Mat4) InitScreenSpaceTransform( halfW, halfH float32 ) {
 	m[3][0] = 0; m[3][1] = 0; m[3][2] = 0; m[3][3] = 1
 }
 
+func (m *Mat4) InitLookAt( pos, targ, up Vec3 ) {
+}
+
 func (m *Mat4) InitTranslation( x, y, z float32 ) {
 	m[0][0] = 1; m[0][1] = 0; m[0][2] = 0; m[0][3] = x
 	m[1][0] = 0; m[1][1] = 1; m[1][2] = 0; m[1][3] = y
@@ -87,3 +90,4 @@ func (m Mat4) Transform( v Vec4 ) Vec4 {
 
 	return rv
 }
+

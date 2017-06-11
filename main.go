@@ -88,8 +88,19 @@ func main() {
 	// texture bitmap
 	tex := NewBitmapFromFile( "./tex.png" )
 	//toptex := NewBitmapFromFile( "./top.png" )
-	// obj mesh
-	objmesh := LoadOBJMesh( "./mesh.obj" )
+	// obj mesh, front face is CW
+	objmesh := NewMesh()//LoadOBJMesh( "./mesh.obj" )
+	objmesh.Vertices = append( objmesh.Vertices,
+		Vertex{ Vec4{ -0.5, 0, 0.5, 1 }, Vec4{ 0, 0, 0, 1 } },
+		Vertex{ Vec4{ 0.5, 0, 0.5, 1 }, Vec4{ 2000, 0, 0, 1 } },
+		Vertex{ Vec4{ 0.5, 0, -0.5, 1 }, Vec4{ 2000, 2000, 0, 1 } },
+		Vertex{ Vec4{ -0.5, 0, -0.5, 1 }, Vec4{ 0, 2000, 0, 1 } }, )
+	objmesh.Indices = append( objmesh.Indices,
+		0, 1, 2, 0, 2, 3 )
+
+	// transform
+	tform := NewTransform( Vec3{ 0, -1, 2 } )
+	tform.Scale = Vec3{ 2000, 1, 2000 }
 
 	// perspective projection matrix
 	// aspect should be of the logical size
@@ -97,10 +108,8 @@ func main() {
 	// 3d rt can now be any arbritary size and
 	// automatically be corrected
 	aspect := float32(VID_W) / float32(VID_H)
-	fovH := float32(90) // degrees
-	var ProjMat Mat4
-	ProjMat.InitPerspective( (math.Pi / 180.0) * (fovH * (1.0 / aspect)),
-		float32(VID2D_W) / VID2D_H, 0.1, 1000.0 )
+	// fovh in degrees
+	cam := NewCamera( Vec3{ 0, 0, 0 }, 90, aspect, 0.1, 1024.0 )
 
 	// main loops
 	for bRun == true {
@@ -131,29 +140,11 @@ func main() {
 		ctx.Bm.Clear( 0x10 )
 		ctx.ClearDepthBuffer()
 
-		// front face is CW
-		// mesh vertices and transform
-		/*meshPlane0 := NewMesh()
-
-		meshPlane0.Vertices = append( meshPlane0.Vertices,
-				Vertex{ Vec4{ -1, 0, 1, 1 }, Vec4{ 0, 0, 0, 1 } },
-				Vertex{ Vec4{ 1, 0, 1, 1 }, Vec4{ 1, 0, 0, 1 } },
-				Vertex{ Vec4{ 1, 0, -1, 1 }, Vec4{ 1, 1, 0, 1 } },
-				Vertex{ Vec4{ -1, 0, -1, 1 }, Vec4{ 0, 1, 0, 1 } } )
-
-		meshPlane0.Indices = append( meshPlane0.Indices, 0, 1, 2, 0, 2, 3 )*/
-
 		trot += dt
-		var transMat Mat4
-		var rotMat Mat4
-		var scaleMat Mat4
-		transMat.InitTranslation( 0, 0, 3.5 - float32(math.Sin(float64(trot/4.0))*4) )
-		rotMat.InitRotation( trot/2, 0, trot/2 )
-		scaleMat.InitScale( 1, 1, 1 )
 
-		tform := transMat.Mul( rotMat.Mul( scaleMat ) )
+		tform.Rot.Y = trot/4
 
-		objmesh.Draw( ctx, ProjMat.Mul( tform ), tex )
+		objmesh.Draw( ctx, cam.GetViewProj().Mul( tform.GetModel() ), tex )
 
 		//stars.UpdateAndRender( ctx, dt )
 
@@ -184,6 +175,8 @@ func main() {
 		Rnd.Copy( rndTex, nil, nil )
 		Rnd.Present()
 	}
+
+	fmt.Println( math.Pi )
 
 	font0.Close()
 

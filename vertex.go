@@ -7,10 +7,16 @@ type Vec2 struct {
 	X, Y float32
 }
 
+// Vec3
 type Vec3 struct {
 	X, Y, Z float32
 }
 
+func (v Vec3) Add( n Vec3 ) Vec3 {
+	return Vec3{ v.X + n.X, v.Y + n.Y, v.Z + n.Z }
+}
+
+// Vec4
 type Vec4 struct {
 	X, Y, Z, W float32
 }

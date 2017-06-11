@@ -51,7 +51,7 @@ func (r *RenderContext) DrawTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
 		return
 	}
 
-	if !v1In && !v2In && !v3In { return }
+	//if !v1In && !v2In && !v3In { return }
 
 	vertices := make( []Vertex, 0 )
 	auxList := make( []Vertex, 0 )
@@ -152,6 +152,14 @@ func (r *RenderContext) DrawScanLine( left, right Edge, j int, texture *Bitmap )
 			z := 1.0 / oneOverZ
 			srcX := int((texCoordX * z) * float32(texture.Width - 1) + 0.5)
 			srcY := int((texCoordY * z) * float32(texture.Height - 1) + 0.5)
+
+			// texture repeat
+			if srcX >= texture.Width || srcX < 0 {
+				srcX -= (srcX / texture.Width * texture.Width)
+			}
+			if srcY >= texture.Height || srcY < 0 {
+				srcY -= (srcY / texture.Height * texture.Height)
+			}
 
 			r.Bm.CopyPixel( i, j, srcX, srcY, texture )
 		}
