@@ -13,6 +13,7 @@ type Camera struct {
 }
 
 // fovh in degrees
+// forward is actually +z, idk
 func NewCamera( pos Vec3, fovh, aspect, znear, zfar float32 ) *Camera {
 	c := &Camera{}
 
@@ -21,7 +22,7 @@ func NewCamera( pos Vec3, fovh, aspect, znear, zfar float32 ) *Camera {
 	c.proj.InitPerspective( c.fovv, aspect, znear, zfar )
 
 	c.fovh = fovh
-	c.forward = Vec3{ 0, 0, 1 }
+	c.forward = Vec3{ 0, 0, -1 }
 	c.up = Vec3{ 0, 1, 0 }
 	c.znear = znear
 	c.zfar = zfar
@@ -32,6 +33,6 @@ func NewCamera( pos Vec3, fovh, aspect, znear, zfar float32 ) *Camera {
 }
 
 func (c *Camera) GetViewProj() Mat4 {
-	//var viewMat Mat4; viewMat.InitLookAt( c.Pos, c.Pos.Add( c.forward ), c.up )
-	return c.proj//.Mul( viewMat )
+	var viewMat Mat4; viewMat.InitLookAt( c.Pos, c.Pos.Add( c.forward ), c.up )
+	return c.proj.Mul( viewMat )
 }

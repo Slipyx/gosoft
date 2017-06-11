@@ -30,6 +30,16 @@ func (m *Mat4) InitScreenSpaceTransform( halfW, halfH float32 ) {
 }
 
 func (m *Mat4) InitLookAt( pos, targ, up Vec3 ) {
+	f := targ.Sub( pos ).Normalize()
+	s := f.Cross( up.Normalize() ).Normalize()
+	u := s.Cross( f )
+	m.InitIdentity()
+	m[0][0] = s.X; m[0][1] = u.X; m[0][2] = -f.X;
+	m[1][0] = s.Y; m[1][1] = u.Y; m[1][2] = -f.Y;
+	m[2][0] = s.Z; m[2][1] = u.Z; m[2][2] = -f.Z;
+
+	var pm Mat4; pm.InitTranslation( -pos.X, -pos.Y, -pos.Z )
+	*m = m.Mul( pm )
 }
 
 func (m *Mat4) InitTranslation( x, y, z float32 ) {
@@ -90,4 +100,3 @@ func (m Mat4) Transform( v Vec4 ) Vec4 {
 
 	return rv
 }
-

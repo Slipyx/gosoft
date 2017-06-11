@@ -92,15 +92,15 @@ func main() {
 	objmesh := NewMesh()//LoadOBJMesh( "./mesh.obj" )
 	objmesh.Vertices = append( objmesh.Vertices,
 		Vertex{ Vec4{ -0.5, 0, 0.5, 1 }, Vec4{ 0, 0, 0, 1 } },
-		Vertex{ Vec4{ 0.5, 0, 0.5, 1 }, Vec4{ 2000, 0, 0, 1 } },
-		Vertex{ Vec4{ 0.5, 0, -0.5, 1 }, Vec4{ 2000, 2000, 0, 1 } },
-		Vertex{ Vec4{ -0.5, 0, -0.5, 1 }, Vec4{ 0, 2000, 0, 1 } }, )
+		Vertex{ Vec4{ 0.5, 0, 0.5, 1 }, Vec4{ 100, 0, 0, 1 } },
+		Vertex{ Vec4{ 0.5, 0, -0.5, 1 }, Vec4{ 100, 100, 0, 1 } },
+		Vertex{ Vec4{ -0.5, 0, -0.5, 1 }, Vec4{ 0, 100, 0, 1 } }, )
 	objmesh.Indices = append( objmesh.Indices,
 		0, 1, 2, 0, 2, 3 )
 
 	// transform
-	tform := NewTransform( Vec3{ 0, -1, 2 } )
-	tform.Scale = Vec3{ 2000, 1, 2000 }
+	tform := NewTransform( Vec3{ 0, 0, 0 } )
+	tform.Scale = Vec3{ 100, 1, 100 }
 
 	// perspective projection matrix
 	// aspect should be of the logical size
@@ -109,7 +109,7 @@ func main() {
 	// automatically be corrected
 	aspect := float32(VID_W) / float32(VID_H)
 	// fovh in degrees
-	cam := NewCamera( Vec3{ 0, 0, 0 }, 90, aspect, 0.1, 1024.0 )
+	cam := NewCamera( Vec3{ 0, 0.5, 10 }, 90, aspect, 0.1, 1024.0 )
 
 	// main loops
 	for bRun == true {
@@ -142,7 +142,9 @@ func main() {
 
 		trot += dt
 
-		tform.Rot.Y = trot/4
+		//tform.Rot.Y = trot/4
+		cam.Pos.Z += dt*2
+		cam.Pos.X += dt
 
 		objmesh.Draw( ctx, cam.GetViewProj().Mul( tform.GetModel() ), tex )
 

@@ -51,6 +51,7 @@ func (r *RenderContext) DrawTriangle( v1, v2, v3 Vertex, texture *Bitmap ) {
 		return
 	}
 
+	// skip only if entire mesh is outside
 	//if !v1In && !v2In && !v3In { return }
 
 	vertices := make( []Vertex, 0 )

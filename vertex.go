@@ -16,6 +16,23 @@ func (v Vec3) Add( n Vec3 ) Vec3 {
 	return Vec3{ v.X + n.X, v.Y + n.Y, v.Z + n.Z }
 }
 
+func (v Vec3) Sub( n Vec3 ) Vec3 {
+	return Vec3{ v.X - n.X, v.Y - n.Y, v.Z - n.Z }
+}
+
+func (v Vec3) Len() float32 {
+	return float32(math.Sqrt( float64(v.X * v.X + v.Y * v.Y + v.Z * v.Z) ))
+}
+
+func (v Vec3) Cross( n Vec3 ) Vec3 {
+	return Vec3{ v.Y * n.Z - v.Z * n.Y, v.Z * n.X - v.X * n.Z, v.X * n.Y - v.Y * n.X }
+}
+
+func (v Vec3) Normalize() Vec3 {
+	l := 1.0 / v.Len()
+	return Vec3{ v.X * l, v.Y * l, v.Z * l }
+}
+
 // Vec4
 type Vec4 struct {
 	X, Y, Z, W float32
